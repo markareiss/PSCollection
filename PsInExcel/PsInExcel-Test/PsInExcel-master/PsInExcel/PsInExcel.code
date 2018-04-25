@@ -1,0 +1,49 @@
+Function PowerShell(cellValue) As String
+    PowerShell = PS(cellValue)
+End Function
+
+Function PS(cellValue, Optional ByVal showMessage As Boolean = False) As String
+
+'Create File to write PS Text to file
+Dim fso As Object
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+Dim psFilePath As String
+psFilePath = Environ$("TEMP") & "\" & CreateObject("Scripting.FileSystemObject").GetTempName() & ".ps1"
+
+Dim oFile As Object
+Set oFile = fso.CreateTextFile(psFilePath)
+
+oFile.WriteLine cellValue
+oFile.Close
+
+Set fso = Nothing
+Set oFile = Nothing
+
+Dim cmd As String
+Dim exitCode As Integer
+Dim tempFile As String
+
+' Construct the name of a temporary file to capture the command's stdout output in.
+tempFile = Environ$("TEMP") & "\" & CreateObject("Scripting.FileSystemObject").GetTempName()
+
+' Define the command to invoke.
+cmd = "powershell -windowstyle hidden " & psFilePath
+
+exitCode = CreateObject("WScript.Shell").Run("cmd /c " & cmd & " >" & tempFile, vbHidden, True)
+If exitCode = 0 Then
+
+    ' Read the output file, then delete temp files.
+    PS = CreateObject("Scripting.FileSystemObject").OpenTextFile(tempFile).ReadAll()
+    
+    If showMessage Then
+        MsgBox PS
+    End If
+    
+    CreateObject("Scripting.FileSystemObject").DeleteFile (tempFile)
+    CreateObject("Scripting.FileSystemObject").DeleteFile (psFilePath)
+Else
+    MsgBox "An unexpected error occurred.", vbExclamation
+End If
+
+End Function

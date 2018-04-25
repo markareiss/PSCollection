@@ -1,0 +1,232 @@
+=PSCall("$bigNumber = 1 * 2 * 4 * 8 * 16; echo $bigNumber")
+=PSCall("$bigNumber = 1 * 2 * 4 * 8 * 16; $bigNumber")
+=PS("echo ""Proof of concept""")
+=PSCall("$bigNumber = 1 * 2 * 4 * 8 * 16; write-host ""1 * 2 * 4 * 8 * 16 is equal to $($bigNumber)""",FALSE)
+=PSCall("$processes = Get-Process; $processes | out-gridview;")
+=PSCall("Add-Type -AssemblyName PresentationCore,PresentationFramework;[System.Windows.MessageBox]::Show('Kevin...What do you want this to do?')")
+=PSCall("$bigNumber = 1 * 2 * 4 * 8 * 16; write-host ""1 * 2 * 4 * 8 * 16 is equal to $($bigNumber)""",FALSE)
+=PSCall("$processes = Get-Process; $processes | out-gridview;")
+=PSCall("Add-Type -AssemblyName PresentationCore,PresentationFramework;[System.Windows.MessageBox]::Show('Kevin...What do you want this to do?')")
+
+=capturedOutput("$bigNumber = 1 * 2 * 4 * 8 * 16; echo $bigNumber")
+
+=capturedOutput("$bigNumber = 1 * 2 * 4 * 8 * 16; $bigNumber")
+=capturedOutput("$bigNumber = 1 * 2 * 4 * 8 * 16; write-host $bigNumber")
+=capturedOutput("$bigNumber = 1 * 2 * 4 * 8 * 16; write-output $bigNumber")
+=capturedOutput("write-host ""this what you want kevin?""")
+
+PS("Write-Output ""Proof of concept""")
+
+
+
+Function PSCall(cellValue, Optional ByVal hidden As Boolean = True)
+
+'Create File to write PS Text to file
+Dim fso As Object
+Set fso = CreateObject("Scripting.FileSystemObject")
+Dim oFile As Object
+Set oFile = fso.CreateTextFile("C:\temp\test.ps1")
+oFile.WriteLine cellValue
+oFile.Close
+Set fso = Nothing
+Set oFile = Nothing
+
+'Run PS File
+If (hidden) Then
+    PSCall = Shell("powershell -noexit -windowstyle hidden ""C:\temp\test.ps1""", 1)
+Else
+    PSCall = Shell("powershell -noexit ""C:\temp\test.ps1""", 1)
+End If
+
+'TODO: Kill orphaned PS threads
+
+End Function
+
+
+Function PS(cellValue, Optional ByVal hidden As Boolean = True) As String
+
+'Create File to write PS Text to file
+Dim fso As Object
+Set fso = CreateObject("Scripting.FileSystemObject")
+Dim oFile As Object
+Set oFile = fso.CreateTextFile("C:\temp\test.ps1")
+oFile.WriteLine cellValue
+oFile.Close
+Set fso = Nothing
+Set oFile = Nothing
+
+'Run PS File
+If (hidden) Then
+    PS = Shell("powershell -noexit -windowstyle hidden ""C:\temp\test.ps1""", 4)
+Else
+    PS = Shell("powershell -noexit ""C:\temp\test.ps1""")
+End If
+
+'TODO: Kill orphaned PS threads
+
+End Function
+
+
+Public Function ShellRun(sCmd As String) As String
+
+    'Run a shell command, returning the output as a string'
+
+    Dim oShell As Object
+    Set oShell = CreateObject("WScript.Shell")
+
+    'run command'
+    Dim oExec As Object
+    Dim oOutput As Object
+    Set oExec = oShell.Exec(sCmd)
+    Set oOutput = oExec.StdOut
+
+    'handle the results as they are written to and read from the StdOut object'
+    Dim s As String
+    Dim sLine As String
+    While Not oOutput.AtEndOfStream
+        sLine = oOutput.ReadLine
+        If sLine <> "" Then s = s & sLine & vbCrLf
+    Wend
+
+    ShellRun = s
+
+End Function
+
+
+Function PSCall(cellValue, Optional ByVal hidden As Boolean = True)
+
+'Create File to write PS Text to file
+Dim fso As Object
+Set fso = CreateObject("Scripting.FileSystemObject")
+Dim oFile As Object
+Set oFile = fso.CreateTextFile("C:\temp\test.ps1")
+oFile.WriteLine cellValue
+oFile.Close
+Set fso = Nothing
+Set oFile = Nothing
+
+'Run PS File
+If (hidden) Then
+    pscmd = Shell("powershell -noexit -windowstyle hidden ""C:\temp\test.ps1""", 1)
+Else
+    pscmd = Shell("powershell -noexit ""C:\temp\test.ps1""", 1)
+End If
+
+
+
+'TODO: Kill orphaned PS threads
+
+End Function
+
+
+
+Option Explicit
+
+Private Type SECURITY_ATTRIBUTES
+    nLength As Long
+    lpSecurityDescriptor As Long
+    bInheritHandle As Long
+End Type
+
+Private Type PROCESS_INFORMATION
+    hProcess As Long
+    hThread As Long
+    dwProcessId As Long
+    dwThreadId As Long
+End Type
+
+Private Type STARTUPINFO
+    cb As Long
+    lpReserved As Long
+    lpDesktop As Long
+    lpTitle As Long
+    dwX As Long
+    dwY As Long
+    dwXSize As Long
+    dwYSize As Long
+    dwXCountChars As Long
+    dwYCountChars As Long
+    dwFillAttribute As Long
+    dwFlags As Long
+    wShowWindow As Integer
+    cbReserved2 As Integer
+    lpReserved2 As Byte
+    hStdInput As Long
+    hStdOutput As Long
+    hStdError As Long
+End Type
+
+Private Const WAIT_INFINITE         As Long = (-1&)
+Private Const STARTF_USESHOWWINDOW  As Long = &H1
+Private Const STARTF_USESTDHANDLES  As Long = &H100
+Private Const SW_HIDE               As Long = 0&
+
+Private Declare Function CreatePipe Lib "kernel32" (phReadPipe As Long, phWritePipe As Long, lpPipeAttributes As SECURITY_ATTRIBUTES, ByVal nSize As Long) As Long
+Private Declare Function CreateProcess Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As Long, ByVal lpCommandLine As String, lpProcessAttributes As Any, lpThreadAttributes As Any, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDriectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
+Private Declare Function ReadFile Lib "kernel32" (ByVal hFile As Long, lpBuffer As Any, ByVal nNumberOfBytesToRead As Long, lpNumberOfBytesRead As Long, lpOverlapped As Any) As Long
+Private Declare Function CloseHandle Lib "kernel32" (ByVal hObject As Long) As Long
+Private Declare Function WaitForSingleObject Lib "kernel32" (ByVal hHandle As Long, ByVal dwMilliseconds As Long) As Long
+Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
+Private Declare Sub GetStartupInfo Lib "kernel32" Alias "GetStartupInfoA" (lpStartupInfo As STARTUPINFO)
+Private Declare Function GetFileSize Lib "kernel32" (ByVal hFile As Long, lpFileSizeHigh As Long) As Long
+
+Public Function Redirect(szBinaryPath As String, szCommandLn As String) As String
+
+Dim tSA_CreatePipe              As SECURITY_ATTRIBUTES
+Dim tSA_CreateProcessPrc        As SECURITY_ATTRIBUTES
+Dim tSA_CreateProcessThrd       As SECURITY_ATTRIBUTES
+Dim tSA_CreateProcessPrcInfo    As PROCESS_INFORMATION
+Dim tStartupInfo                As STARTUPINFO
+Dim hRead                       As Long
+Dim hWrite                      As Long
+Dim bRead                       As Long
+Dim abytBuff()                  As Byte
+Dim lngResult                   As Long
+Dim szFullCommand               As String
+Dim lngExitCode                 As Long
+Dim lngSizeOf                   As Long
+
+tSA_CreatePipe.nLength = Len(tSA_CreatePipe)
+tSA_CreatePipe.lpSecurityDescriptor = 0&
+tSA_CreatePipe.bInheritHandle = True
+
+tSA_CreateProcessPrc.nLength = Len(tSA_CreateProcessPrc)
+tSA_CreateProcessThrd.nLength = Len(tSA_CreateProcessThrd)
+
+If (CreatePipe(hRead, hWrite, tSA_CreatePipe, 0&) <> 0&) Then
+    tStartupInfo.cb = Len(tStartupInfo)
+    GetStartupInfo tStartupInfo
+
+    With tStartupInfo
+        .hStdOutput = hWrite
+        .hStdError = hWrite
+        .dwFlags = STARTF_USESHOWWINDOW Or STARTF_USESTDHANDLES
+        .wShowWindow = SW_HIDE
+    End With
+    
+    szFullCommand = """" & szBinaryPath & """" & " " & szCommandLn
+    lngResult = CreateProcess(0&, szFullCommand, tSA_CreateProcessPrc, tSA_CreateProcessThrd, True, 0&, 0&, vbNullString, tStartupInfo, tSA_CreateProcessPrcInfo)
+
+    If (lngResult <> 0&) Then
+        lngResult = WaitForSingleObject(tSA_CreateProcessPrcInfo.hProcess, WAIT_INFINITE)
+        lngSizeOf = GetFileSize(hRead, 0&)
+        If (lngSizeOf > 0) Then
+            ReDim abytBuff(lngSizeOf - 1)
+            If ReadFile(hRead, abytBuff(0), UBound(abytBuff) + 1, bRead, ByVal 0&) Then
+                Redirect = StrConv(abytBuff, vbUnicode)
+            End If
+        End If
+        Call GetExitCodeProcess(tSA_CreateProcessPrcInfo.hProcess, lngExitCode)
+        CloseHandle tSA_CreateProcessPrcInfo.hThread
+        CloseHandle tSA_CreateProcessPrcInfo.hProcess
+                
+        If (lngExitCode <> 0&) Then Err.Raise vbObject + 1235&, "GetExitCodeProcess", "Non-zero Application exist code"
+        
+        CloseHandle hWrite
+        CloseHandle hRead
+    Else
+        Err.Raise vbObject + 1236&, "CreateProcess", "CreateProcess Failed, Code: " & Err.LastDllError
+    End If
+End If
+End Function
+End Function
